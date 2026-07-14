@@ -3,127 +3,192 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#0b0f14">
+<meta name="theme-color" content="#F6EEE1">
 <title>Padel Turnier</title>
 <style>
   :root{
-    --bg:#0b0f14;
-    --card-bg:#161c24;
-    --card-border:#232b36;
-    --text:#e8edf3;
-    --muted:#8b96a5;
-    --accent:#4ade80;
-    --played-bg:#152219;
-    --played-border:#2f4a37;
-    --input-bg:#0f151c;
-    --danger:#e0524d;
-    --leader:#ffd54a;
+    --bg:#F6EEE1;
+    --card-bg:#EFE3D1;
+    --border:#DED0B4;
+    --text:#26201A;
+    --muted:#93897A;
+    --accent:#BC5A2C;
+    --accent-soft:#F1DDC5;
+    --danger:#A83B34;
+    --danger-soft:#F3DEDA;
+    --font-serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,'Courier New',monospace;
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
   body{
     background:var(--bg);
     color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font-sans);
     padding-bottom:40px;
   }
+
   .topbar{
     position:sticky; top:0; z-index:10;
-    background:linear-gradient(180deg,#101820,#0d1319);
-    border-bottom:1px solid var(--card-border);
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
     padding:12px 16px;
     display:flex; justify-content:space-between; align-items:center;
     gap:8px; flex-wrap:wrap;
   }
-  .topbar-title{ font-weight:700; font-size:1.05rem; white-space:nowrap; }
-  .topbar-leader{ font-size:0.88rem; color:var(--accent); font-weight:600; text-align:right; }
+  .topbar-left{ display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase; color:var(--text); }
+  .topbar-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); flex:none; }
+  .topbar-right{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.02em; color:var(--accent); font-weight:600; text-align:right; text-transform:uppercase; }
 
-  main{ padding:12px; max-width:640px; margin:0 auto; }
+  main{ padding:16px; max-width:640px; margin:0 auto; }
+
+  .eyebrow{ font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+  .hero{ margin-bottom:22px; }
+  .hero-title{ font-family:var(--font-serif); font-size:2.4rem; line-height:1.05; margin:0 0 18px; font-weight:400; }
+  .accent-italic{ color:var(--accent); font-style:italic; }
+
+  .meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; margin-bottom:18px; }
+  .meta-label{ font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin-bottom:2px; }
+  .meta-value{ font-size:0.95rem; }
+
+  .crew-box{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    border:1px dashed var(--border); border-radius:14px; padding:12px 14px; margin-bottom:26px;
+  }
+  .crew-avatars{ display:flex; }
+  .avatar{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:0.72rem; font-weight:700; color:#3A2E22;
+    margin-left:-8px; border:2px solid var(--bg);
+  }
+  .avatar:first-child{ margin-left:0; }
+  .crew-caption{ font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); }
+
+  .section-label{ font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+  h2{ font-family:var(--font-serif); font-weight:400; font-size:1.5rem; margin:0 0 14px; }
 
   .card{
     background:var(--card-bg);
-    border:1px solid var(--card-border);
-    border-radius:12px;
-    padding:12px 14px;
-    margin-bottom:16px;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:16px 16px;
+    margin-bottom:20px;
   }
   details.names-card summary{
-    cursor:pointer; font-weight:600; font-size:1.05rem; padding:4px 0;
+    cursor:pointer; font-family:var(--font-serif); font-size:1.3rem; padding:2px 0;
     list-style:none;
   }
   details.names-card summary::-webkit-details-marker{ display:none; }
-  details.names-card summary::before{ content:"▸ "; color:var(--muted); }
+  details.names-card summary::before{ content:"▸ "; color:var(--accent); font-family:var(--font-sans); }
   details.names-card[open] summary::before{ content:"▾ "; }
-  .names-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-  .name-field label{ display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px; }
+  .names-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .name-field label{ display:block; font-family:var(--font-mono); font-size:0.68rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
   .name-field input{
-    width:100%; padding:10px 10px; font-size:1rem; border-radius:8px;
-    border:1px solid var(--card-border); background:var(--input-bg); color:var(--text);
+    width:100%; padding:10px 10px; font-size:1rem; border-radius:10px;
+    border:1px solid var(--border); background:var(--bg); color:var(--text); font-family:var(--font-sans);
   }
   .name-field input:focus{ outline:none; border-color:var(--accent); }
 
-  h2{ font-size:1.05rem; margin:4px 0 10px; }
-
-  table{ width:100%; border-collapse:collapse; font-size:0.9rem; }
-  th,td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--card-border); }
-  th{ color:var(--muted); font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.02em; }
+  table{ width:100%; border-collapse:collapse; font-size:0.92rem; }
+  th,td{ text-align:left; padding:9px 6px; border-bottom:1px solid var(--border); }
+  th{ font-family:var(--font-mono); color:var(--muted); font-weight:600; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; }
   td:nth-child(1), th:nth-child(1){ width:1.6em; }
   td:nth-child(3), td:nth-child(4), td:nth-child(5),
   th:nth-child(3), th:nth-child(4), th:nth-child(5){ text-align:center; }
-  tr.leader-row td{ color:var(--leader); font-weight:700; }
+  td:nth-child(3){ font-family:var(--font-serif); font-size:1.05rem; }
+  tr.leader-row td{ color:var(--accent); font-weight:700; }
   tbody tr:last-child td{ border-bottom:none; }
+  .name-cell{ display:flex; align-items:center; gap:8px; }
+  .name-cell .avatar{ margin-left:0; width:24px; height:24px; font-size:0.62rem; border:none; }
+
+  .hint{ font-size:0.88rem; color:var(--muted); margin:0 0 14px; line-height:1.4; }
+  .share-btn{
+    display:block; width:100%; padding:14px; font-size:1rem; font-weight:600;
+    background:var(--accent); color:#FBF3E8; border:none; border-radius:12px; margin-bottom:10px;
+    font-family:var(--font-sans);
+  }
+  .share-btn:active{ opacity:0.85; }
+  .share-link-input{
+    width:100%; padding:10px 10px; font-size:0.82rem; border-radius:10px;
+    border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:var(--font-mono);
+  }
 
   .round-card{
     background:var(--card-bg);
-    border:1px solid var(--card-border);
-    border-radius:12px;
-    padding:12px 14px;
-    margin-bottom:10px;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:14px 16px;
+    margin-bottom:12px;
     transition:background .15s, border-color .15s;
   }
-  .round-card.played{ background:var(--played-bg); border-color:var(--played-border); }
-  .round-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-  .round-num{ font-weight:700; color:var(--muted); font-size:0.88rem; }
-  .round-check{ opacity:0; color:var(--accent); font-weight:700; font-size:1.05rem; }
-  .round-card.played .round-check{ opacity:1; }
+  .round-card.played{ background:var(--accent-soft); border-color:var(--accent); }
+  .round-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .round-num{ font-family:var(--font-mono); font-weight:600; color:var(--muted); font-size:0.72rem; letter-spacing:0.04em; text-transform:uppercase; }
+  .status-pill{
+    font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.05em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted);
+  }
+  .round-card.played .status-pill{ background:var(--accent); border-color:var(--accent); color:#FBF3E8; }
 
-  .teams-row{ display:flex; align-items:flex-start; gap:8px; }
-  .team{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; }
-  .team-names{ font-size:0.94rem; text-align:center; line-height:1.25; word-break:break-word; min-height:2.5em; display:flex; align-items:center; justify-content:center; }
-  .vs{ color:var(--muted); font-weight:700; padding-top:22px; font-size:0.85rem; }
+  .teams-row{ display:flex; align-items:flex-start; gap:6px; }
+  .team{ flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .team.team-a{ align-items:flex-start; }
+  .team.team-b{ align-items:flex-end; }
+  .team-names{ font-family:var(--font-serif); font-size:0.92rem; line-height:1.25; word-break:break-word; min-height:2.4em; display:flex; align-items:center; }
+  .team.team-b .team-names{ text-align:right; justify-content:flex-end; }
+  .arrow{ color:var(--muted); font-family:var(--font-mono); font-size:1rem; padding-top:10px; flex:none; }
 
   .score-input{
-    width:64px; height:52px; font-size:1.35rem; text-align:center; border-radius:10px;
-    border:1px solid var(--card-border); background:var(--input-bg); color:var(--text);
+    width:76px; height:48px; font-size:1.6rem; font-family:var(--font-serif); border-radius:8px;
+    border:none; border-bottom:2px solid var(--border); background:transparent; color:var(--text);
     -moz-appearance:textfield;
   }
-  .score-input:focus{ outline:none; border-color:var(--accent); }
+  .team-a .score-input{ text-align:left; }
+  .team-b .score-input{ text-align:right; }
+  .score-input:focus{ outline:none; border-bottom-color:var(--accent); }
   .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 
-  .resting{ margin-top:10px; font-size:0.76rem; color:var(--muted); text-align:center; }
+  .resting{ margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-family:var(--font-mono); font-size:0.7rem; letter-spacing:0.02em; color:var(--muted); text-align:center; }
 
   .reset-btn{
     display:block; width:100%; padding:14px; margin-top:24px;
     background:transparent; border:1px solid var(--danger); color:var(--danger);
-    border-radius:10px; font-size:1rem; font-weight:600;
+    border-radius:12px; font-size:0.95rem; font-weight:600; font-family:var(--font-sans);
   }
-  .reset-btn:active{ background:rgba(224,82,77,0.15); }
+  .reset-btn:active{ background:var(--danger-soft); }
 </style>
 </head>
 <body>
 
 <header class="topbar">
-  <div class="topbar-title">🎾 Padel Turnier</div>
-  <div class="topbar-leader" id="leaderInfo">–</div>
+  <div class="topbar-left"><span class="topbar-dot"></span>Padel Fermoselle</div>
+  <div class="topbar-right" id="leaderInfo">–</div>
 </header>
 
 <main>
+  <section class="hero">
+    <div class="eyebrow">SIETE AMIGOS · TURNIER</div>
+    <h1 class="hero-title">Padel <span class="accent-italic">Turnier.</span></h1>
+    <div class="meta-grid">
+      <div><div class="meta-label">Modus</div><div class="meta-value">Doppel · Round Robin</div></div>
+      <div><div class="meta-label">Runden</div><div class="meta-value">21</div></div>
+      <div><div class="meta-label">Spieler</div><div class="meta-value">7</div></div>
+      <div><div class="meta-label">Format</div><div class="meta-value">Tiebreak</div></div>
+    </div>
+    <div class="crew-box">
+      <div class="crew-avatars" id="crewAvatars"></div>
+      <div class="crew-caption">Padel Crew · 7 Spieler</div>
+    </div>
+  </section>
+
   <details class="card names-card" open>
     <summary>Spielernamen</summary>
     <div class="names-grid" id="namesGrid"></div>
   </details>
 
   <section class="card">
+    <div class="section-label">02 · Stand</div>
     <h2>Tabelle</h2>
     <table>
       <thead>
@@ -133,7 +198,16 @@
     </table>
   </section>
 
+  <section class="card">
+    <div class="section-label">03 · Teilen</div>
+    <h2>Ergebnisse teilen</h2>
+    <p class="hint">Erzeugt einen Link mit dem aktuellen Stand — schick ihn an alle Teilnehmer. Nach neuen Ergebnissen einfach erneut erzeugen &amp; verschicken.</p>
+    <button id="shareBtn" class="share-btn" type="button">Link erzeugen &amp; teilen</button>
+    <input type="text" id="shareLink" class="share-link-input" readonly placeholder="Noch kein Link erzeugt">
+  </section>
+
   <section>
+    <div class="section-label">04 · Runden</div>
     <h2>Runden</h2>
     <div id="roundsList"></div>
   </section>
@@ -168,6 +242,8 @@
     [2,5,3,4],
     [2,7,4,6]
   ];
+
+  var PLAYER_COLORS = ["#E3B2A0","#B7C79E","#D9BE95","#A7C6C4","#E1AEC0","#BFC08A","#AFB3D9"];
 
   var STORAGE_KEY = "padelFermoselleV1";
 
@@ -210,9 +286,16 @@
     return n || ("Spieler " + num);
   }
 
-  function updateNameDisplays(num){
-    var els = document.querySelectorAll('[data-player="' + num + '"]');
-    for(var i=0;i<els.length;i++){ els[i].textContent = getName(num); }
+  function avatarInitial(num){
+    var n = (state.names[num-1] || "").trim();
+    return n ? n.charAt(0).toUpperCase() : String(num);
+  }
+
+  function updatePlayerDisplays(num){
+    var nameEls = document.querySelectorAll('[data-player-name="' + num + '"]');
+    for(var i=0;i<nameEls.length;i++){ nameEls[i].textContent = getName(num); }
+    var avatarEls = document.querySelectorAll('[data-player-avatar="' + num + '"]');
+    for(var j=0;j<avatarEls.length;j++){ avatarEls[j].textContent = avatarInitial(num); }
   }
 
   function isValidScore(v){
@@ -229,9 +312,18 @@
 
   function createPlayerSpan(num){
     var span = document.createElement("span");
-    span.dataset.player = String(num);
+    span.dataset.playerName = String(num);
     span.textContent = getName(num);
     return span;
+  }
+
+  function createAvatar(num){
+    var av = document.createElement("span");
+    av.className = "avatar";
+    av.style.background = PLAYER_COLORS[num-1];
+    av.dataset.playerAvatar = String(num);
+    av.textContent = avatarInitial(num);
+    return av;
   }
 
   function buildTeamNamesDiv(p1, p2){
@@ -241,6 +333,12 @@
     div.appendChild(document.createTextNode(" & "));
     div.appendChild(createPlayerSpan(p2));
     return div;
+  }
+
+  function renderCrewAvatars(){
+    var box = document.getElementById("crewAvatars");
+    box.innerHTML = "";
+    for(var i=1;i<=7;i++){ box.appendChild(createAvatar(i)); }
   }
 
   function renderNames(){
@@ -264,7 +362,7 @@
         input.addEventListener("input", function(){
           state.names[i-1] = input.value;
           saveState();
-          updateNameDisplays(i);
+          updatePlayerDisplays(i);
           renderTable();
           renderLeader();
         });
@@ -279,8 +377,14 @@
   function updateRoundPlayedState(idx){
     var card = document.getElementById("round-" + idx);
     if(!card) return;
-    if(isRoundPlayed(idx)) card.classList.add("played");
-    else card.classList.remove("played");
+    var pill = card.querySelector(".status-pill");
+    if(isRoundPlayed(idx)){
+      card.classList.add("played");
+      if(pill) pill.textContent = "Gespielt";
+    }else{
+      card.classList.remove("played");
+      if(pill) pill.textContent = "Offen";
+    }
   }
 
   function renderRounds(){
@@ -302,19 +406,18 @@
       var roundNum = document.createElement("span");
       roundNum.className = "round-num";
       roundNum.textContent = "Runde " + (idx+1);
-      var check = document.createElement("span");
-      check.className = "round-check";
-      check.textContent = "✓";
+      var pill = document.createElement("span");
+      pill.className = "status-pill";
+      pill.textContent = "Offen";
       header.appendChild(roundNum);
-      header.appendChild(check);
+      header.appendChild(pill);
       card.appendChild(header);
 
       var teamsRow = document.createElement("div");
       teamsRow.className = "teams-row";
 
       var teamA = document.createElement("div");
-      teamA.className = "team";
-      teamA.appendChild(buildTeamNamesDiv(a1, a2));
+      teamA.className = "team team-a";
       var inputA = document.createElement("input");
       inputA.type = "number";
       inputA.min = "0";
@@ -333,14 +436,14 @@
         renderLeader();
       });
       teamA.appendChild(inputA);
+      teamA.appendChild(buildTeamNamesDiv(a1, a2));
 
-      var vs = document.createElement("div");
-      vs.className = "vs";
-      vs.textContent = ":";
+      var arrow = document.createElement("div");
+      arrow.className = "arrow";
+      arrow.textContent = "vs";
 
       var teamB = document.createElement("div");
-      teamB.className = "team";
-      teamB.appendChild(buildTeamNamesDiv(b1, b2));
+      teamB.className = "team team-b";
       var inputB = document.createElement("input");
       inputB.type = "number";
       inputB.min = "0";
@@ -359,9 +462,10 @@
         renderLeader();
       });
       teamB.appendChild(inputB);
+      teamB.appendChild(buildTeamNamesDiv(b1, b2));
 
       teamsRow.appendChild(teamA);
-      teamsRow.appendChild(vs);
+      teamsRow.appendChild(arrow);
       teamsRow.appendChild(teamB);
       card.appendChild(teamsRow);
 
@@ -413,7 +517,17 @@
       if(i === 0 && s.points > 0) tr.classList.add("leader-row");
 
       var tdRank = document.createElement("td"); tdRank.textContent = i+1;
-      var tdName = document.createElement("td"); tdName.textContent = getName(s.num);
+
+      var tdName = document.createElement("td");
+      var nameCell = document.createElement("div");
+      nameCell.className = "name-cell";
+      nameCell.appendChild(createAvatar(s.num));
+      var nameText = document.createElement("span");
+      nameText.dataset.playerName = String(s.num);
+      nameText.textContent = getName(s.num);
+      nameCell.appendChild(nameText);
+      tdName.appendChild(nameCell);
+
       var tdPoints = document.createElement("td"); tdPoints.textContent = s.points;
       var tdPlayed = document.createElement("td"); tdPlayed.textContent = s.played;
       var tdWins = document.createElement("td"); tdWins.textContent = s.wins;
@@ -445,6 +559,42 @@
     }
   }
 
+  function encodeState(){
+    var json = JSON.stringify({ names: state.names, results: state.results });
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+
+  function buildShareUrl(){
+    var base = location.href.replace(/[^/]*$/, "");
+    return base + "ergebnisse.html#d=" + encodeState();
+  }
+
+  function initShare(){
+    var btn = document.getElementById("shareBtn");
+    var input = document.getElementById("shareLink");
+    var defaultLabel = btn.textContent;
+
+    btn.addEventListener("click", function(){
+      var url = buildShareUrl();
+      input.value = url;
+
+      if(navigator.share){
+        navigator.share({ title: "Padel Turnier – Ergebnisse", url: url }).catch(function(){});
+        return;
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){
+          btn.textContent = "Link kopiert ✓";
+          setTimeout(function(){ btn.textContent = defaultLabel; }, 2000);
+        }).catch(function(){
+          input.select();
+        });
+        return;
+      }
+      input.select();
+    });
+  }
+
   function resetAll(){
     if(!confirm("Wirklich alle Daten löschen?")) return;
     state = defaultState();
@@ -453,14 +603,17 @@
     renderRounds();
     renderTable();
     renderLeader();
+    renderCrewAvatars();
   }
 
   document.getElementById("resetBtn").addEventListener("click", resetAll);
 
+  renderCrewAvatars();
   renderNames();
   renderRounds();
   renderTable();
   renderLeader();
+  initShare();
 })();
 </script>
 
