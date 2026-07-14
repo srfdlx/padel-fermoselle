@@ -139,10 +139,37 @@
     font-family:var(--font-sans);
   }
   .share-btn:active{ opacity:0.85; }
+  .share-btn:disabled{ opacity:0.6; }
+  .share-btn-secondary{ background:transparent; border:1px solid var(--border); color:var(--text); }
   .share-link-input{
     width:100%; padding:10px 10px; font-size:0.82rem; border-radius:10px;
     border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:var(--font-mono);
   }
+  .publish-status{ font-family:var(--font-mono); font-size:0.78rem; min-height:1.2em; margin-bottom:6px; }
+  .publish-status.success{ color:var(--accent); }
+  .publish-status.error{ color:var(--danger); }
+  .text-link-btn{
+    display:inline-block; background:none; border:none; padding:0; margin-bottom:14px;
+    font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.03em; color:var(--muted);
+    text-decoration:underline; cursor:pointer;
+  }
+  .token-help summary{
+    cursor:pointer; font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.04em;
+    text-transform:uppercase; color:var(--muted); list-style:none; margin-bottom:14px;
+  }
+  .token-help summary::-webkit-details-marker{ display:none; }
+  .token-help summary::before{ content:"▸ "; color:var(--accent); font-family:var(--font-sans); }
+  .token-help[open] summary::before{ content:"▾ "; }
+  .token-steps{ margin:0 0 4px; padding-left:20px; color:var(--muted); font-size:0.85rem; line-height:1.6; }
+  .manual-share{ margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+  .manual-share summary{
+    cursor:pointer; font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.04em;
+    text-transform:uppercase; color:var(--muted); list-style:none;
+  }
+  .manual-share summary::-webkit-details-marker{ display:none; }
+  .manual-share summary::before{ content:"▸ "; color:var(--accent); font-family:var(--font-sans); }
+  .manual-share[open] summary::before{ content:"▾ "; }
+  .manual-share > .hint{ margin-top:12px; }
 
   .round-card{
     background:var(--card-bg);
@@ -235,10 +262,29 @@
     <div class="section-label">03 · Teilen</div>
     <h2>Ergebnisse teilen</h2>
     <p class="hint">Dauerhafter Link für alle Teilnehmer — zeigt bei jedem Aufruf den zuletzt veröffentlichten Stand:</p>
-    <input type="text" class="share-link-input" readonly value="https://srfdlx.github.io/padel-fermoselle/ergebnisse.html" onclick="this.select()" style="margin-bottom:14px;">
-    <p class="hint">Um ihn zu aktualisieren: Snapshot-Link erzeugen und im Claude-Chat schicken — der Stand wird dann für alle veröffentlicht.</p>
-    <button id="shareBtn" class="share-btn" type="button">Snapshot-Link erzeugen</button>
-    <input type="text" id="shareLink" class="share-link-input" readonly placeholder="Noch kein Link erzeugt">
+    <input type="text" class="share-link-input" readonly value="https://srfdlx.github.io/padel-fermoselle/ergebnisse.html" onclick="this.select()" style="margin-bottom:16px;">
+
+    <details class="token-help">
+      <summary>Wie bekomme ich einen Token?</summary>
+      <ol class="token-steps">
+        <li>github.com → Profilbild → Settings → Developer settings</li>
+        <li>Personal access tokens → Fine-grained tokens → Generate new token</li>
+        <li>Repository access → "Only select repositories" → padel-fermoselle</li>
+        <li>Permissions → Repository permissions → Contents → "Read and write"</li>
+        <li>Token generieren, kopieren, beim ersten Klick auf "Veröffentlichen" hier einfügen</li>
+      </ol>
+    </details>
+
+    <button id="publishBtn" class="share-btn" type="button">Ergebnisse veröffentlichen</button>
+    <div id="publishStatus" class="publish-status" role="status"></div>
+    <button id="changeTokenBtn" class="text-link-btn" type="button">Token ändern</button>
+
+    <details class="manual-share">
+      <summary>Alternative: Link manuell verschicken</summary>
+      <p class="hint">Erzeugt eine Momentaufnahme als eigenen Link (z. B. für WhatsApp) — ohne Token, aber der Link ändert sich bei jeder neuen Version.</p>
+      <button id="shareBtn" class="share-btn share-btn-secondary" type="button">Snapshot-Link erzeugen</button>
+      <input type="text" id="shareLink" class="share-link-input" readonly placeholder="Noch kein Link erzeugt">
+    </details>
   </section>
 
   <section>
@@ -630,6 +676,101 @@
     });
   }
 
+  var GH_TOKEN_KEY = "padelFermoselleGhToken";
+  var GH_OWNER = "srfdlx";
+  var GH_REPO = "padel-fermoselle";
+  var GH_BRANCH = "main";
+  var GH_PATH = "results.json";
+
+  function getGhToken(promptIfMissing){
+    var token = null;
+    try{ token = localStorage.getItem(GH_TOKEN_KEY); }catch(e){}
+    if(!token && promptIfMissing){
+      token = window.prompt("GitHub-Token einfügen (wird nur auf diesem Gerät gespeichert):", "");
+      if(token){
+        token = token.trim();
+        if(token){
+          try{ localStorage.setItem(GH_TOKEN_KEY, token); }catch(e){}
+        }
+      }
+    }
+    return token || null;
+  }
+
+  function utf8ToBase64(str){
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  function setPublishStatus(text, kind){
+    var el = document.getElementById("publishStatus");
+    el.textContent = text;
+    el.className = "publish-status" + (kind ? " " + kind : "");
+  }
+
+  function publishResults(){
+    var btn = document.getElementById("publishBtn");
+    var token = getGhToken(true);
+    if(!token){
+      setPublishStatus("Kein Token hinterlegt.", "error");
+      return;
+    }
+
+    var originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Veröffentliche …";
+    setPublishStatus("", "");
+
+    var apiUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_PATH;
+
+    fetch(apiUrl + "?ref=" + GH_BRANCH, {
+      headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" }
+    }).then(function(getRes){
+      if(getRes.status === 401){ return Promise.reject({ code: "auth" }); }
+      if(!getRes.ok){ return Promise.reject({ code: "fetch", status: getRes.status }); }
+      return getRes.json();
+    }).then(function(fileInfo){
+      var json = JSON.stringify({ names: state.names, results: state.results }, null, 2);
+      return fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Accept": "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "Ergebnisse aktualisiert",
+          content: utf8ToBase64(json),
+          sha: fileInfo.sha,
+          branch: GH_BRANCH
+        })
+      });
+    }).then(function(putRes){
+      if(putRes.status === 401){ return Promise.reject({ code: "auth" }); }
+      if(!putRes.ok){ return Promise.reject({ code: "put", status: putRes.status }); }
+      var now = new Date();
+      var time = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+      setPublishStatus("Veröffentlicht ✓ (" + time + " Uhr)", "success");
+    }).catch(function(err){
+      if(err && err.code === "auth"){
+        try{ localStorage.removeItem(GH_TOKEN_KEY); }catch(e){}
+        setPublishStatus("Token ungültig/abgelaufen — bitte neu hinterlegen und erneut versuchen.", "error");
+      }else{
+        setPublishStatus("Fehler beim Veröffentlichen. Bitte erneut versuchen.", "error");
+      }
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    });
+  }
+
+  function initPublish(){
+    document.getElementById("publishBtn").addEventListener("click", publishResults);
+    document.getElementById("changeTokenBtn").addEventListener("click", function(){
+      try{ localStorage.removeItem(GH_TOKEN_KEY); }catch(e){}
+      setPublishStatus("Token entfernt. Nächste Veröffentlichung fragt neu.", "");
+    });
+  }
+
   function resetAll(){
     if(!confirm("Wirklich alle Daten löschen?")) return;
     state = defaultState();
@@ -680,6 +821,7 @@
   renderTable();
   renderLeader();
   initShare();
+  initPublish();
   initTheme();
 })();
 </script>
