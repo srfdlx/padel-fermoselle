@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#F6EEE1">
 <title>Padel Turnier · Ergebnisse</title>
+<script>
+(function(){
+  try{
+    if(localStorage.getItem("padelFermoselleTheme") === "dark"){
+      document.documentElement.setAttribute("data-theme","dark");
+    }
+  }catch(e){}
+})();
+</script>
 <style>
   :root{
     --bg:#F6EEE1;
@@ -18,6 +27,15 @@
     --font-mono:ui-monospace,'SF Mono','Cascadia Mono','Roboto Mono',Menlo,Consolas,'Courier New',monospace;
     --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   }
+  :root[data-theme="dark"]{
+    --bg:#1B1712;
+    --card-bg:#251F18;
+    --border:#3B3327;
+    --text:#EDE3D2;
+    --muted:#8C8172;
+    --accent:#E27E48;
+    --accent-soft:#37281A;
+  }
   *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
   body{
@@ -25,6 +43,7 @@
     color:var(--text);
     font-family:var(--font-sans);
     padding-bottom:40px;
+    transition:background-color .2s, color .2s;
   }
 
   .topbar{
@@ -32,10 +51,18 @@
     background:var(--bg);
     border-bottom:1px solid var(--border);
     padding:12px 16px;
-    display:flex; align-items:center; gap:8px;
-    font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
   }
+  .topbar-left{ display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase; }
   .topbar-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); flex:none; }
+
+  .theme-toggle{
+    width:34px; height:34px; border-radius:50%; flex:none;
+    border:1px solid var(--border); background:var(--card-bg); color:var(--text);
+    font-size:1rem; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background-color .2s, border-color .2s;
+  }
+  .theme-toggle:active{ opacity:0.8; }
 
   main{ padding:16px; max-width:640px; margin:0 auto; }
 
@@ -100,7 +127,10 @@
 <body>
 
 <header class="topbar">
-  <span class="topbar-dot"></span>Padel Fermoselle
+  <div class="topbar-left"><span class="topbar-dot"></span>Padel Fermoselle</div>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Dunkles Design umschalten" aria-pressed="false">
+    <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+  </button>
 </header>
 
 <main id="app">
@@ -360,11 +390,43 @@
     app.appendChild(roundsDetails);
   }
 
+  var THEME_KEY = "padelFermoselleTheme";
+
+  function loadTheme(){
+    try{
+      var t = localStorage.getItem(THEME_KEY);
+      if(t === "dark" || t === "light") return t;
+    }catch(e){}
+    return "light";
+  }
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", theme === "dark" ? "#1B1712" : "#F6EEE1");
+    var btn = document.getElementById("themeToggle");
+    if(btn){
+      btn.querySelector(".theme-toggle-icon").textContent = theme === "dark" ? "☀" : "☾";
+      btn.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    }
+  }
+
+  function initTheme(){
+    var theme = loadTheme();
+    applyTheme(theme);
+    document.getElementById("themeToggle").addEventListener("click", function(){
+      theme = theme === "dark" ? "light" : "dark";
+      try{ localStorage.setItem(THEME_KEY, theme); }catch(e){}
+      applyTheme(theme);
+    });
+  }
+
   if(!state){
     renderEmpty();
   }else{
     renderApp();
   }
+  initTheme();
 })();
 </script>
 
