@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0b0f14">
+<title>Padel Turnier</title>
+<style>
+  :root{
+    --bg:#0b0f14;
+    --card-bg:#161c24;
+    --card-border:#232b36;
+    --text:#e8edf3;
+    --muted:#8b96a5;
+    --accent:#4ade80;
+    --played-bg:#152219;
+    --played-border:#2f4a37;
+    --input-bg:#0f151c;
+    --danger:#e0524d;
+    --leader:#ffd54a;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding-bottom:40px;
+  }
+  .topbar{
+    position:sticky; top:0; z-index:10;
+    background:linear-gradient(180deg,#101820,#0d1319);
+    border-bottom:1px solid var(--card-border);
+    padding:12px 16px;
+    display:flex; justify-content:space-between; align-items:center;
+    gap:8px; flex-wrap:wrap;
+  }
+  .topbar-title{ font-weight:700; font-size:1.05rem; white-space:nowrap; }
+  .topbar-leader{ font-size:0.88rem; color:var(--accent); font-weight:600; text-align:right; }
+
+  main{ padding:12px; max-width:640px; margin:0 auto; }
+
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:16px;
+  }
+  details.names-card summary{
+    cursor:pointer; font-weight:600; font-size:1.05rem; padding:4px 0;
+    list-style:none;
+  }
+  details.names-card summary::-webkit-details-marker{ display:none; }
+  details.names-card summary::before{ content:"▸ "; color:var(--muted); }
+  details.names-card[open] summary::before{ content:"▾ "; }
+  .names-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .name-field label{ display:block; font-size:0.75rem; color:var(--muted); margin-bottom:4px; }
+  .name-field input{
+    width:100%; padding:10px 10px; font-size:1rem; border-radius:8px;
+    border:1px solid var(--card-border); background:var(--input-bg); color:var(--text);
+  }
+  .name-field input:focus{ outline:none; border-color:var(--accent); }
+
+  h2{ font-size:1.05rem; margin:4px 0 10px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:0.9rem; }
+  th,td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--card-border); }
+  th{ color:var(--muted); font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.02em; }
+  td:nth-child(1), th:nth-child(1){ width:1.6em; }
+  td:nth-child(3), td:nth-child(4), td:nth-child(5),
+  th:nth-child(3), th:nth-child(4), th:nth-child(5){ text-align:center; }
+  tr.leader-row td{ color:var(--leader); font-weight:700; }
+  tbody tr:last-child td{ border-bottom:none; }
+
+  .round-card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    transition:background .15s, border-color .15s;
+  }
+  .round-card.played{ background:var(--played-bg); border-color:var(--played-border); }
+  .round-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .round-num{ font-weight:700; color:var(--muted); font-size:0.88rem; }
+  .round-check{ opacity:0; color:var(--accent); font-weight:700; font-size:1.05rem; }
+  .round-card.played .round-check{ opacity:1; }
+
+  .teams-row{ display:flex; align-items:flex-start; gap:8px; }
+  .team{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; }
+  .team-names{ font-size:0.94rem; text-align:center; line-height:1.25; word-break:break-word; min-height:2.5em; display:flex; align-items:center; justify-content:center; }
+  .vs{ color:var(--muted); font-weight:700; padding-top:22px; font-size:0.85rem; }
+
+  .score-input{
+    width:64px; height:52px; font-size:1.35rem; text-align:center; border-radius:10px;
+    border:1px solid var(--card-border); background:var(--input-bg); color:var(--text);
+    -moz-appearance:textfield;
+  }
+  .score-input:focus{ outline:none; border-color:var(--accent); }
+  .score-input::-webkit-outer-spin-button, .score-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+
+  .resting{ margin-top:10px; font-size:0.76rem; color:var(--muted); text-align:center; }
+
+  .reset-btn{
+    display:block; width:100%; padding:14px; margin-top:24px;
+    background:transparent; border:1px solid var(--danger); color:var(--danger);
+    border-radius:10px; font-size:1rem; font-weight:600;
+  }
+  .reset-btn:active{ background:rgba(224,82,77,0.15); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">🎾 Padel Turnier</div>
+  <div class="topbar-leader" id="leaderInfo">–</div>
+</header>
+
+<main>
+  <details class="card names-card" open>
+    <summary>Spielernamen</summary>
+    <div class="names-grid" id="namesGrid"></div>
+  </details>
+
+  <section class="card">
+    <h2>Tabelle</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Pkt</th><th>Sp.</th><th>Siege</th></tr>
+      </thead>
+      <tbody id="standingsBody"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Runden</h2>
+    <div id="roundsList"></div>
+  </section>
+
+  <button id="resetBtn" class="reset-btn" type="button">Alle Daten löschen</button>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var SCHEDULE = [
+    [1,6,2,4],
+    [1,2,5,6],
+    [3,6,1,5],
+    [1,3,6,7],
+    [6,7,3,5],
+    [2,5,4,7],
+    [3,4,2,6],
+    [3,7,1,4],
+    [2,3,4,7],
+    [1,3,2,6],
+    [3,7,1,2],
+    [1,4,3,5],
+    [1,5,2,7],
+    [5,7,2,3],
+    [5,6,1,7],
+    [5,7,4,6],
+    [4,5,3,6],
+    [4,5,1,6],
+    [2,4,1,7],
+    [2,5,3,4],
+    [2,7,4,6]
+  ];
+
+  var STORAGE_KEY = "padelFermoselleV1";
+
+  function defaultState(){
+    return {
+      names: ["","","","","","",""],
+      results: SCHEDULE.map(function(){ return { a:"", b:"" }; })
+    };
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultState();
+      var parsed = JSON.parse(raw);
+      if(!parsed || !Array.isArray(parsed.names) || parsed.names.length !== 7 ||
+         !Array.isArray(parsed.results) || parsed.results.length !== SCHEDULE.length){
+        return defaultState();
+      }
+      parsed.results = parsed.results.map(function(r){
+        r = r || {};
+        return { a: r.a === undefined || r.a === null ? "" : String(r.a), b: r.b === undefined || r.b === null ? "" : String(r.b) };
+      });
+      return parsed;
+    }catch(e){
+      return defaultState();
+    }
+  }
+
+  var state = loadState();
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){ /* storage unavailable, ignore */ }
+  }
+
+  function getName(num){
+    var n = (state.names[num-1] || "").trim();
+    return n || ("Spieler " + num);
+  }
+
+  function updateNameDisplays(num){
+    var els = document.querySelectorAll('[data-player="' + num + '"]');
+    for(var i=0;i<els.length;i++){ els[i].textContent = getName(num); }
+  }
+
+  function isValidScore(v){
+    if(v === "" || v === null || v === undefined) return false;
+    if(!/^\d+$/.test(String(v).trim())) return false;
+    var n = Number(v);
+    return Number.isFinite(n) && n >= 0;
+  }
+
+  function isRoundPlayed(idx){
+    var r = state.results[idx];
+    return isValidScore(r.a) && isValidScore(r.b);
+  }
+
+  function createPlayerSpan(num){
+    var span = document.createElement("span");
+    span.dataset.player = String(num);
+    span.textContent = getName(num);
+    return span;
+  }
+
+  function buildTeamNamesDiv(p1, p2){
+    var div = document.createElement("div");
+    div.className = "team-names";
+    div.appendChild(createPlayerSpan(p1));
+    div.appendChild(document.createTextNode(" & "));
+    div.appendChild(createPlayerSpan(p2));
+    return div;
+  }
+
+  function renderNames(){
+    var grid = document.getElementById("namesGrid");
+    grid.innerHTML = "";
+    for(var i=1;i<=7;i++){
+      (function(i){
+        var wrap = document.createElement("div");
+        wrap.className = "name-field";
+
+        var label = document.createElement("label");
+        label.textContent = "Spieler " + i;
+        label.htmlFor = "nameInput" + i;
+
+        var input = document.createElement("input");
+        input.type = "text";
+        input.id = "nameInput" + i;
+        input.placeholder = "Spieler " + i;
+        input.value = state.names[i-1] || "";
+        input.autocomplete = "off";
+        input.addEventListener("input", function(){
+          state.names[i-1] = input.value;
+          saveState();
+          updateNameDisplays(i);
+          renderTable();
+          renderLeader();
+        });
+
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+        grid.appendChild(wrap);
+      })(i);
+    }
+  }
+
+  function updateRoundPlayedState(idx){
+    var card = document.getElementById("round-" + idx);
+    if(!card) return;
+    if(isRoundPlayed(idx)) card.classList.add("played");
+    else card.classList.remove("played");
+  }
+
+  function renderRounds(){
+    var list = document.getElementById("roundsList");
+    list.innerHTML = "";
+    var all = [1,2,3,4,5,6,7];
+
+    SCHEDULE.forEach(function(entry, idx){
+      var a1 = entry[0], a2 = entry[1], b1 = entry[2], b2 = entry[3];
+      var playing = entry;
+      var resting = all.filter(function(p){ return playing.indexOf(p) === -1; });
+
+      var card = document.createElement("div");
+      card.className = "round-card";
+      card.id = "round-" + idx;
+
+      var header = document.createElement("div");
+      header.className = "round-header";
+      var roundNum = document.createElement("span");
+      roundNum.className = "round-num";
+      roundNum.textContent = "Runde " + (idx+1);
+      var check = document.createElement("span");
+      check.className = "round-check";
+      check.textContent = "✓";
+      header.appendChild(roundNum);
+      header.appendChild(check);
+      card.appendChild(header);
+
+      var teamsRow = document.createElement("div");
+      teamsRow.className = "teams-row";
+
+      var teamA = document.createElement("div");
+      teamA.className = "team";
+      teamA.appendChild(buildTeamNamesDiv(a1, a2));
+      var inputA = document.createElement("input");
+      inputA.type = "number";
+      inputA.min = "0";
+      inputA.step = "1";
+      inputA.inputMode = "numeric";
+      inputA.pattern = "[0-9]*";
+      inputA.className = "score-input";
+      inputA.placeholder = "–";
+      inputA.value = state.results[idx].a;
+      inputA.setAttribute("aria-label", "Punkte Team A, Runde " + (idx+1));
+      inputA.addEventListener("input", function(){
+        state.results[idx].a = inputA.value;
+        saveState();
+        updateRoundPlayedState(idx);
+        renderTable();
+        renderLeader();
+      });
+      teamA.appendChild(inputA);
+
+      var vs = document.createElement("div");
+      vs.className = "vs";
+      vs.textContent = ":";
+
+      var teamB = document.createElement("div");
+      teamB.className = "team";
+      teamB.appendChild(buildTeamNamesDiv(b1, b2));
+      var inputB = document.createElement("input");
+      inputB.type = "number";
+      inputB.min = "0";
+      inputB.step = "1";
+      inputB.inputMode = "numeric";
+      inputB.pattern = "[0-9]*";
+      inputB.className = "score-input";
+      inputB.placeholder = "–";
+      inputB.value = state.results[idx].b;
+      inputB.setAttribute("aria-label", "Punkte Team B, Runde " + (idx+1));
+      inputB.addEventListener("input", function(){
+        state.results[idx].b = inputB.value;
+        saveState();
+        updateRoundPlayedState(idx);
+        renderTable();
+        renderLeader();
+      });
+      teamB.appendChild(inputB);
+
+      teamsRow.appendChild(teamA);
+      teamsRow.appendChild(vs);
+      teamsRow.appendChild(teamB);
+      card.appendChild(teamsRow);
+
+      var restDiv = document.createElement("div");
+      restDiv.className = "resting";
+      restDiv.appendChild(document.createTextNode("Pause: "));
+      resting.forEach(function(p, i){
+        restDiv.appendChild(createPlayerSpan(p));
+        if(i < resting.length - 1) restDiv.appendChild(document.createTextNode(", "));
+      });
+      card.appendChild(restDiv);
+
+      list.appendChild(card);
+      updateRoundPlayedState(idx);
+    });
+  }
+
+  function computeStandings(){
+    var stats = {};
+    for(var p=1;p<=7;p++){ stats[p] = { num:p, points:0, played:0, wins:0 }; }
+
+    SCHEDULE.forEach(function(entry, idx){
+      if(!isRoundPlayed(idx)) return;
+      var a1 = entry[0], a2 = entry[1], b1 = entry[2], b2 = entry[3];
+      var scoreA = Number(state.results[idx].a);
+      var scoreB = Number(state.results[idx].b);
+
+      [a1,a2].forEach(function(p){ stats[p].points += scoreA; stats[p].played += 1; });
+      [b1,b2].forEach(function(p){ stats[p].points += scoreB; stats[p].played += 1; });
+
+      if(scoreA > scoreB){ stats[a1].wins++; stats[a2].wins++; }
+      else if(scoreB > scoreA){ stats[b1].wins++; stats[b2].wins++; }
+    });
+
+    return Object.keys(stats).map(function(k){ return stats[k]; }).sort(function(x,y){
+      if(y.points !== x.points) return y.points - x.points;
+      if(y.wins !== x.wins) return y.wins - x.wins;
+      return x.num - y.num;
+    });
+  }
+
+  function renderTable(){
+    var body = document.getElementById("standingsBody");
+    body.innerHTML = "";
+    var standings = computeStandings();
+
+    standings.forEach(function(s, i){
+      var tr = document.createElement("tr");
+      if(i === 0 && s.points > 0) tr.classList.add("leader-row");
+
+      var tdRank = document.createElement("td"); tdRank.textContent = i+1;
+      var tdName = document.createElement("td"); tdName.textContent = getName(s.num);
+      var tdPoints = document.createElement("td"); tdPoints.textContent = s.points;
+      var tdPlayed = document.createElement("td"); tdPlayed.textContent = s.played;
+      var tdWins = document.createElement("td"); tdWins.textContent = s.wins;
+
+      tr.appendChild(tdRank);
+      tr.appendChild(tdName);
+      tr.appendChild(tdPoints);
+      tr.appendChild(tdPlayed);
+      tr.appendChild(tdWins);
+      body.appendChild(tr);
+    });
+  }
+
+  function renderLeader(){
+    var el = document.getElementById("leaderInfo");
+    var standings = computeStandings();
+    var top = standings[0];
+
+    if(!top || top.points === 0){
+      el.textContent = "Noch keine Ergebnisse";
+      return;
+    }
+
+    var leaders = standings.filter(function(s){ return s.points === top.points; });
+    if(leaders.length > 1){
+      el.textContent = "Führung: " + leaders.map(function(l){ return getName(l.num); }).join(", ") + " (" + top.points + " Pkt.)";
+    }else{
+      el.textContent = "Führung: " + getName(top.num) + " (" + top.points + " Pkt.)";
+    }
+  }
+
+  function resetAll(){
+    if(!confirm("Wirklich alle Daten löschen?")) return;
+    state = defaultState();
+    saveState();
+    renderNames();
+    renderRounds();
+    renderTable();
+    renderLeader();
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+  renderNames();
+  renderRounds();
+  renderTable();
+  renderLeader();
+})();
+</script>
+
+</body>
+</html>
