@@ -197,7 +197,36 @@
     }catch(e){ return null; }
   }
 
-  var state = loadFromHash() || loadFromLocalStorage();
+  function isEmptyState(s){
+    var hasName = s.names.some(function(n){ return (n || "").trim() !== ""; });
+    var hasResult = s.results.some(function(r){ return (r.a || "") !== "" || (r.b || "") !== ""; });
+    return !hasName && !hasResult;
+  }
+
+  function loadFromResultsJson(){
+    return fetch("results.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function(res){ return res.ok ? res.json() : null; })
+      .then(function(parsed){
+        if(!parsed || !Array.isArray(parsed.names) || parsed.names.length !== 7 ||
+           !Array.isArray(parsed.results) || parsed.results.length !== SCHEDULE.length){
+          return null;
+        }
+        return parsed;
+      })
+      .catch(function(){ return null; });
+  }
+
+  var state = null;
+
+  function loadState(){
+    var hashState = loadFromHash();
+    if(hashState) return Promise.resolve(hashState);
+
+    return loadFromResultsJson().then(function(live){
+      if(live && !isEmptyState(live)) return live;
+      return loadFromLocalStorage();
+    });
+  }
 
   function getName(num){
     var n = (state.names[num-1] || "").trim();
@@ -421,11 +450,14 @@
     });
   }
 
-  if(!state){
-    renderEmpty();
-  }else{
-    renderApp();
-  }
+  loadState().then(function(result){
+    state = result;
+    if(!state){
+      renderEmpty();
+    }else{
+      renderApp();
+    }
+  });
   initTheme();
 })();
 </script>

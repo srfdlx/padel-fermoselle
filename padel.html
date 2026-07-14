@@ -234,8 +234,10 @@
   <section class="card">
     <div class="section-label">03 · Teilen</div>
     <h2>Ergebnisse teilen</h2>
-    <p class="hint">Erzeugt einen Link mit dem aktuellen Stand — schick ihn an alle Teilnehmer. Nach neuen Ergebnissen einfach erneut erzeugen &amp; verschicken.</p>
-    <button id="shareBtn" class="share-btn" type="button">Link erzeugen &amp; teilen</button>
+    <p class="hint">Dauerhafter Link für alle Teilnehmer — zeigt bei jedem Aufruf den zuletzt veröffentlichten Stand:</p>
+    <input type="text" class="share-link-input" readonly value="https://srfdlx.github.io/padel-fermoselle/ergebnisse.html" onclick="this.select()" style="margin-bottom:14px;">
+    <p class="hint">Um ihn zu aktualisieren: Snapshot-Link erzeugen und im Claude-Chat schicken — der Stand wird dann für alle veröffentlicht.</p>
+    <button id="shareBtn" class="share-btn" type="button">Snapshot-Link erzeugen</button>
     <input type="text" id="shareLink" class="share-link-input" readonly placeholder="Noch kein Link erzeugt">
   </section>
 
