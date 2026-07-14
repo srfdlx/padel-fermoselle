@@ -722,16 +722,30 @@
 
     var apiUrl = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_PATH;
 
-    fetch(apiUrl + "?ref=" + GH_BRANCH, {
+    function readErrorMessage(res){
+      return res.json().then(function(body){
+        return (body && body.message) ? body.message : ("HTTP " + res.status);
+      }).catch(function(){
+        return "HTTP " + res.status;
+      });
+    }
+
+    fetch(apiUrl + "?ref=" + GH_BRANCH + "&_=" + Date.now(), {
+      cache: "no-store",
       headers: { "Authorization": "Bearer " + token, "Accept": "application/vnd.github+json" }
     }).then(function(getRes){
       if(getRes.status === 401){ return Promise.reject({ code: "auth" }); }
-      if(!getRes.ok){ return Promise.reject({ code: "fetch", status: getRes.status }); }
+      if(!getRes.ok){
+        return readErrorMessage(getRes).then(function(msg){
+          return Promise.reject({ code: "get", message: msg });
+        });
+      }
       return getRes.json();
     }).then(function(fileInfo){
       var json = JSON.stringify({ names: state.names, results: state.results }, null, 2);
       return fetch(apiUrl, {
         method: "PUT",
+        cache: "no-store",
         headers: {
           "Authorization": "Bearer " + token,
           "Accept": "application/vnd.github+json",
@@ -746,7 +760,11 @@
       });
     }).then(function(putRes){
       if(putRes.status === 401){ return Promise.reject({ code: "auth" }); }
-      if(!putRes.ok){ return Promise.reject({ code: "put", status: putRes.status }); }
+      if(!putRes.ok){
+        return readErrorMessage(putRes).then(function(msg){
+          return Promise.reject({ code: "put", message: msg });
+        });
+      }
       var now = new Date();
       var time = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
       setPublishStatus("Veröffentlicht ✓ (" + time + " Uhr)", "success");
@@ -755,7 +773,8 @@
         try{ localStorage.removeItem(GH_TOKEN_KEY); }catch(e){}
         setPublishStatus("Token ungültig/abgelaufen — bitte neu hinterlegen und erneut versuchen.", "error");
       }else{
-        setPublishStatus("Fehler beim Veröffentlichen. Bitte erneut versuchen.", "error");
+        var detail = (err && err.message) ? err.message : "Unbekannter Fehler";
+        setPublishStatus("Fehler beim Veröffentlichen: " + detail, "error");
       }
     }).finally(function(){
       btn.disabled = false;
